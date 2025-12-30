@@ -24,7 +24,3 @@ Configuration files for various development tools and applications.
 ## Usage
 
 Feel free to explore and use any configurations that might be helpful for your own setup.
-
-## License
-
-Feel free to use and modify these configurations for your personal use.
