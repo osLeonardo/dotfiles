@@ -1,0 +1,83 @@
+k9s:
+  body:
+    fgColor: "#C5C8C6"
+    bgColor: "#222222"
+    logoColor: "#FD5FF1"
+  info:
+    fgColor: "#FFD7B1"
+    sectionColor: "#85BEFD"
+  dialog:
+    fgColor: "#C5C8C6"
+    bgColor: "#222222"
+    buttonFgColor: "#222222"
+    buttonBgColor: "#85BEFD"
+    buttonFocusFgColor: "#222222"
+    buttonFocusBgColor: "#FD5FF1"
+    labelFgColor: "#FD5FF1"
+    fieldFgColor: "#C5C8C6"
+  prompt:
+    fgColor: "#C5C8C6"
+    bgColor: "#222222"
+    suggestColor: "#8A8D90"
+  frame:
+    border:
+      fgColor: "#B9B6FC"
+      focusColor: "#FD5FF1"
+    menu:
+      fgColor: "#C5C8C6"
+      keyColor: "#96CBFE"
+      numKeyColor: "#96CBFE"
+    crumbs:
+      fgColor: "#222222"
+      bgColor: "#B9B6FC"
+      activeColor: "#FD5FF1"
+    status:
+      newColor: "#96CBFE"
+      modifyColor: "#B9B6FC"
+      addColor: "#87C38A"
+      errorColor: "#FF5F5F"
+      highlightColor: "#96CBFE"
+      killColor: "#8A8D90"
+      completedColor: "#8A8D90"
+    title:
+      fgColor: "#C5C8C6"
+      bgColor: "#222222"
+      highlightColor: "#FD5FF1"
+      counterColor: "#B9B6FC"
+      filterColor: "#94FA36"
+  views:
+    table:
+      fgColor: "#C5C8C6"
+      bgColor: "#222222"
+      cursorColor: "#FD5FF1"
+      header:
+        fgColor: "#FFD7B1"
+        bgColor: "#222222"
+        sorterColor: "#87C38A"
+    xray:
+      fgColor: "#C5C8C6"
+      bgColor: "#222222"
+      cursorColor: "#85BEFD"
+      graphicColor: "#87C38A"
+      showIcons: false
+    charts:
+      dialDefaultColor: "#85BEFD"
+      dialDefaultChartColor: "#94FA36"
+      chartBgColor: "#222222"
+      defaultChartColor: "#85BEFD"
+    yaml:
+      keyColor: "#85BEFD"
+      colonColor: "#C5C8C6"
+      valueColor: "#87C38A"
+    logs:
+      fgColor: "#B9B6FC"
+      bgColor: "#222222"
+      indicator:
+        fgColor: "#85BEFD"
+        bgColor: "#222222"
+        toggleOnColor: "#94FA36"
+        toggleOffColor: "#444444"
+    help:
+      fgColor: "#C5C8C6"
+      bgColor: "#222222"
+      indicator: "#FD5FF1"

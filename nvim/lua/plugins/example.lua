@@ -72,6 +72,7 @@ return {
       servers = {
         -- pyright will be automatically installed with mason and loaded with lspconfig
         pyright = {},
+        charp_ls = {},
       },
     },
   },
@@ -134,6 +135,7 @@ return {
         "typescript",
         "vim",
         "yaml",
+        "c_sharp",
       },
     },
   },
@@ -191,6 +193,7 @@ return {
         "shellcheck",
         "shfmt",
         "flake8",
+        "csharp-language-server",
       },
     },
   },
