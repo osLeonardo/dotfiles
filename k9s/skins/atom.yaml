@@ -49,7 +49,8 @@ k9s:
     table:
       fgColor: "#C5C8C6"
       bgColor: "#222222"
-      cursorColor: "#FD5FF1"
+      cursorFgColor: "#222222"
+      cursorBgColor: "#FD5FF1"
       header:
         fgColor: "#FFD7B1"
         bgColor: "#222222"
