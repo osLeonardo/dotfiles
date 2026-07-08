@@ -1,0 +1,55 @@
+# Atom
+# Portado a partir do dump do GNOME Terminal (dconf) e do colorscheme
+# atom.lua do Neovim/LazyVim, para manter os três terminais/editores
+# com a mesma paleta.
+
+[colors.primary]
+background = '#222222'
+foreground = '#c5c8c6'
+# Equivalentes a fg_dim / white no atom.lua do Neovim.
+dim_foreground = '#8a8d90'
+bright_foreground = '#e0e0e0'
+
+[colors.cursor]
+# 'cursor' = cor do bloco do cursor, 'text' = cor do caractere sob o cursor
+# (mesmo par cursor/cursor_fg do Cursor highlight no Neovim).
+cursor = '#c5c8c6'
+text = '#161719'
+
+[colors.vi_mode_cursor]
+cursor = '#c5c8c6'
+text = '#161719'
+
+[colors.selection]
+# Mantém a cor original do texto (CellForeground) e só aplica o fundo de
+# seleção, igual ao Visual highlight do Neovim (que só define bg).
+text = 'CellForeground'
+background = '#4a4a4a'
+
+[colors.search.matches]
+foreground = '#000000'
+background = '#f5ffa8'
+
+[colors.search.focused_match]
+foreground = '#000000'
+background = '#fd5ff1'
+
+[colors.normal]
+black   = '#000000'
+red     = '#fd5ff1'
+green   = '#87c38a'
+yellow  = '#ffd7b1'
+blue    = '#85befd'
+magenta = '#b9b6fc'
+cyan    = '#85befd'
+white   = '#e0e0e0'
+
+[colors.bright]
+black   = '#000000'
+red     = '#fd5ff1'
+green   = '#94fa36'
+yellow  = '#f5ffa8'
+blue    = '#96cbfe'
+magenta = '#b9b6fc'
+cyan    = '#85befd'
+white   = '#e0e0e0'
