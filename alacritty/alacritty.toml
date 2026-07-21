@@ -1,6 +1,4 @@
 [window]
-# padding = { x = 8, y = 8 }
-opacity = 0.95
 decorations = "Full"
 startup_mode = "Windowed"
 dynamic_padding = true
@@ -39,3 +37,8 @@ shell = "/bin/bash"
 import = [
   "themes/atom.toml"
 ]
+
+[[keyboard.bindings]]
+key = "Return"
+mods = "Shift"
+chars = "\u001B\r"
