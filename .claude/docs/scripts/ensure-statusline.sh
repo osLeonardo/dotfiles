@@ -7,11 +7,21 @@ if [ ! -f "$LOCAL_FILE" ]; then
   echo '{}' > "$LOCAL_FILE"
 fi
 
-# Inject statusLine if not present
-HAS_STATUS=$(jq 'has("statusLine")' "$LOCAL_FILE")
+# Nothing to inject without a source settings.json
+SOURCE_FILE=".claude/settings.json"
+[ ! -f "$SOURCE_FILE" ] && exit 0
 
-if [ "$HAS_STATUS" = "false" ]; then
-  STATUS_LINE=$(jq '.statusLine' .claude/settings.json)
-  jq --argjson sl "$STATUS_LINE" '. + {statusLine: $sl}' "$LOCAL_FILE" > /tmp/settings_tmp.json \
-    && mv /tmp/settings_tmp.json "$LOCAL_FILE"
+# Inject statusLine into settings.local.json only if not already present there,
+# and only if the source settings.json actually defines one (avoids writing null)
+HAS_STATUS=$(jq 'has("statusLine")' "$LOCAL_FILE")
+SOURCE_HAS_STATUS=$(jq 'has("statusLine") and .statusLine != null' "$SOURCE_FILE")
+
+if [ "$HAS_STATUS" = "false" ] && [ "$SOURCE_HAS_STATUS" = "true" ]; then
+  STATUS_LINE=$(jq '.statusLine' "$SOURCE_FILE")
+  TMP_FILE=$(mktemp "${TMPDIR:-/tmp}/settings_tmp.XXXXXX.json")
+  if jq --argjson sl "$STATUS_LINE" '. + {statusLine: $sl}' "$LOCAL_FILE" > "$TMP_FILE"; then
+    mv "$TMP_FILE" "$LOCAL_FILE"
+  else
+    rm -f "$TMP_FILE"
+  fi
 fi

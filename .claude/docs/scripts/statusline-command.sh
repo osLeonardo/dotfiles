@@ -2,6 +2,7 @@
 input=$(cat)
 
 MODEL=$(echo "$input" | jq -r '.model.display_name // "Unknown"')
+EFFORT=$(echo "$input" | jq -r '.effort.level // ""')
 TOTAL_TOKENS=$(echo "$input" | jq -r '.context_window.total_input_tokens // ""')
 CTX_PCT=$(echo "$input" | jq -r '.context_window.used_percentage // ""')
 SESSION_PCT=$(echo "$input" | jq -r '.rate_limits.five_hour.used_percentage // ""')
@@ -45,9 +46,13 @@ if [ -n "$SESSION_RESETS_AT" ]; then
   fi
 fi
 
-# Assemble: [Sonnet 4.6] | 80k (45%)  | Weekly: 12%| Session: 54% - Reset: 2h15m
+# Assemble: [Sonnet 4.6 - high] | 80k (45%)  | Weekly: 12%| Session: 54% - Reset: 2h15m
 model=""
-[ -n "$MODEL" ] && model="[$MODEL]"
+if [ -n "$MODEL" ] && [ -n "$EFFORT" ]; then
+  model="[$MODEL - $EFFORT]"
+elif [ -n "$MODEL" ]; then
+  model="[$MODEL]"
+fi
 parts=""
 [ -n "$ctx_segment" ] && parts="${parts:+$parts | }$ctx_segment"
 [ -n "$weekly_segment" ] && parts="${parts:+$parts | }$weekly_segment"
