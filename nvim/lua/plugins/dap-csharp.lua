@@ -7,12 +7,16 @@ return {
   },
   {
     "mfussenegger/nvim-dap",
-    opts = function()
+    config = function()
       local dap = require("dap")
       if not dap.adapters["netcoredbg"] then
+        local netcoredbg = vim.fn.exepath("netcoredbg")
+        if netcoredbg == "" then
+          netcoredbg = vim.fn.stdpath("data") .. "/mason/bin/netcoredbg"
+        end
         dap.adapters["netcoredbg"] = {
           type = "executable",
-          command = vim.fn.exepath("netcoredbg"),
+          command = netcoredbg,
           args = { "--interpreter=vscode" },
         }
       end
