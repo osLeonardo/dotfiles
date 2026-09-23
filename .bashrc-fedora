@@ -33,13 +33,14 @@ _is_vscode() {
 if command -v tmux &>/dev/null && [ -z "$TMUX" ] && [ -n "$PS1" ]; then
   if ! (_is_vscode && [ "$VSCODE_TMUX_MODE" = "skip" ]); then
     SESSION="main-$RANDOM"
-    tmux new-session -d -s "$SESSION"
+    TMUX_ARGS=()
 
-    if _is_vscode && [ "$VSCODE_TMUX_MODE" = "no-status" ]; then
-      tmux set -t "$SESSION" status off
+    if _is_vscode; then
+      TMUX_ARGS+=(\; set destroy-unattached on)
+      [ "$VSCODE_TMUX_MODE" = "no-status" ] && TMUX_ARGS+=(\; set status off)
     fi
 
-    tmux attach -t "$SESSION"
+    tmux new-session -s "$SESSION" "${TMUX_ARGS[@]}"
     tmux kill-session -t "$SESSION" 2>/dev/null
     exit
   fi
