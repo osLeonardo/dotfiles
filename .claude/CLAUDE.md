@@ -70,6 +70,12 @@ The `{root}/.claude` directory is the support space for the agent's work, organi
 - **Description:** Web application (PWA) for creating workout routines and tracking exercises. Stack: React 19 + TypeScript + Vite + Tailwind CSS, deployed on Vercel. Has its own release script (`pnpm ship`) that bumps the semantic version.
 - **Domains:** Routine, Exercise, Workout, History
 
+### newcord
+- **Type:** `Fullstack`
+- **Context:** `single`
+- **Description:** Security-focused Discord alternative ("newcord" is a working title until the app is named). Flat groups of up to 10 with one drop-in call each (P2P mesh). Monorepo: Electron + React desktop app, Fastify + SQLite backend, shared TypeBox schemas, MLS via OpenMLS/WASM. Full design and decision log in `docs/guide/`.
+- **Domains:** Account, Device, Group, Message, Call
+
 ### SecondBrain
 - **Type:** `Documentation`
 - **Context:** `N/A`
