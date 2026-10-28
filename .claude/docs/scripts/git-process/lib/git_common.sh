@@ -18,11 +18,12 @@ gc_is_detached() {
   ! git symbolic-ref --quiet HEAD >/dev/null 2>&1
 }
 
-# Is the given branch in the protected list?
+# Is the given branch protected? Matches an exact entry of GS_PROTECTED_BRANCHES
+# or any branch under it as a namespace (e.g. entry 'release' protects 'release/1.2').
 gc_is_protected_branch() {
   local b=$1 p
   for p in $GS_PROTECTED_BRANCHES; do
-    [[ $b == "$p" ]] && return 0
+    [[ $b == "$p" || $b == "$p"/* ]] && return 0
   done
   return 1
 }

@@ -6,6 +6,7 @@ Global rules the agent must follow in any repository in the workspace. Repositor
 
 | What I need | What I must read before implementing |
 |---|---|
+| Write or change any test | `docs/knowledge/testing-rules.md` |
 | Modify backend code in C#/.NET | `docs/knowledge/csharp-patterns.md` |
 | Modify any 'Frontend' repo | `docs/knowledge/ui-ux-patterns.md` |
 | Modify an Angular frontend | `docs/knowledge/angular-patterns.md` |
@@ -32,12 +33,20 @@ Before writing, modifying or removing any code, follow this sequence:
 
 ### Implementation workflow
 
-You must use a mandatory TDD flow. Follow the sequence below without skipping steps:
-1. Write the test cases (Red)
-2. Write the minimum code needed for the tests to pass (Green)
-3. Fix and improve the code following the rules and without breaking the tests (Refactor)
-4. Run all tests in the affected layers/repositories/projects
+You must use a mandatory TDD flow. The unit of the cycle is the **acceptance criterion**:
+
+1. **Red** — write the tests needed to cover every acceptance criterion
+2. **Green** — write the minimum code needed for the tests to pass
+3. **Refactor** — improve the code following the rules and without breaking the tests
+4. Run all tests in the affected layers/repositories/projects until every one passes
 5. If any test fails, repeat steps 3 and 4 iteratively until every test passes
+
+How many tests each criterion gets is your call, guided by `testing-rules.md`. The order guarantees
+only this: no test is born after the code it was supposed to drive — a test written against
+finished code can pass by accident, because nobody ever saw it fail.
+
+What to test, where to test it, how many cases to write and which anti-patterns to avoid live in
+`testing-rules.md` (see Quick references). Read it before writing any test.
 
 ---
 
@@ -64,13 +73,9 @@ The default is **no comments**. Write one only when **all** of the criteria belo
 2. The absence of the comment could confuse a future reader
 3. The reason is a hidden constraint, a subtle invariant, a workaround for a specific bug, or surprising behavior
 
-Additional rules:
-- Do not remove existing comments during refactors — they carry intent and history
-- Write docstrings on public functions: describe their intent in one line + a usage example
-
 ### Tests
 
-- Every new function gets a test
+- **What to test, where, and how many cases: `testing-rules.md`.** Read it before writing any test
 - Every fixed bug gets a regression test
 - Tests must be F.I.R.S.T: *fast, independent, repeatable, self-validating, timely*
 

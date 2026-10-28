@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # lib/validate.sh — deterministic commit message validation.
 #
-# Format (1st line / subject):  [#<issue> - ]<description>
-# The GitHub issue number is optional by default; make it mandatory with
-# GS_REQUIRE_ISSUE=1 in config.sh.
-# e.g. "#42 - fix set volume calculation — it was rounding down"
-GS_MSG_REGEX_STRICT='^#[0-9]+ - [^[:space:]].*$'
-GS_MSG_REGEX_LOOSE='^(#[0-9]+ - )?[^[:space:]].*$'
+# Format (1st line / subject):  [#<issue> ]<what> — <why>
+# (see docs/knowledge/git-commit-rules.md). The GitHub issue number is optional
+# by default; make it mandatory with GS_REQUIRE_ISSUE=1 in config.sh.
+# e.g. "#42 fix set volume calculation — it was rounding down"
+GS_MSG_REGEX_STRICT='^#[0-9]+ [^[:space:]#-].* — [^[:space:]].*$'
+GS_MSG_REGEX_LOOSE='^(#[0-9]+ )?[^[:space:]#-].* — [^[:space:]].*$'
 
 # validate_commit_message <msg> -> 0 = valid | 1 = format | 2 = length
 validate_commit_message() {

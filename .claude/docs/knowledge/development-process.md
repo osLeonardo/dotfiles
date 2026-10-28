@@ -55,12 +55,12 @@ gh pr create --fill
   └── Parallel steps (manual) → multiple terminals with independent sessions
 
   Closing out
-  ├── git-process → tests, push and Pull Request creation
+  ├── git-process → tests, commit, push and Pull Request creation
   └── Merging the PR closes the issue automatically
 
   ONGOING (independent of any issue)
   ├── add-test → retroactive unit test coverage
-  └── refactor → infra improvements and pure refactors
+  └── refactor (standalone) → infra improvements and pure refactors
 ```
 
 ### Detailed walkthrough
@@ -72,7 +72,9 @@ chat, then start a session with the `plan-task` skill. Claude asks questions
 about every aspect of the task, explores the codebase, updates `CONTEXT.md` and
 proposes ADRs when needed. At the end of planning, invoke the `spec-task` skill,
 which synthesizes the conversation and generates the **PRD** — a single file
-containing the requirements document and the partitioned implementation steps.
+containing the requirements document, the acceptance criteria (`AC-N.M`), the
+`Required reading` list and the partitioned implementation steps. You approve the
+whole PRD — criteria and steps — at a single gate.
 
 > The PRD is stored locally in `.claude/docs/prd/`. It is not committed or shared
 > automatically.
@@ -80,16 +82,17 @@ containing the requirements document and the partitioned implementation steps.
 **2. Implementation**
 
 Invoke the `implement-task` skill for each step of the PRD. The flow follows
-mandatory TDD:
-1. Claude proposes the test scenarios → you approve (**Gate 1**)
-2. Claude writes the tests (Red) → writes the minimum code (Green) → refactors (Refactor)
-3. Claude runs all tests in the affected repositories
-4. Claude presents a summary of what was implemented → you approve (**Gate 2**)
-5. The step is marked as finished in the PRD
+mandatory TDD, with no upfront approval of test cases — they derive from the
+acceptance criteria you already approved with the PRD:
+1. Criterion by criterion, Claude writes the tests (Red) → writes the code (Green), deciding what and how much to test per `testing-rules.md`
+2. Claude cleans up the code without breaking the tests
+3. Claude runs `verify` (`git-run-tests.sh`) in the affected repositories
+4. Claude presents a summary and the tests per criterion (`AC-N.M`) → you approve (**code review gate**)
+5. The step is marked as finished in the PRD. On the last step, the `code-reviewer` subagent runs an independent review of the whole PRD, and you decide which findings become fixes
 
 Steps with no dependency between them can be implemented in parallel in two ways:
 
-- **Orchestrated:** invoke `agent-implement-prd` passing the PRD. The agent identifies which steps can run simultaneously, dispatches a subagent (`step-agent`) for each, and only notifies you when a gate requires a decision. The subagents pause autonomously at architectural gates, Gate 1 (test cases) and Gate 2 (code review).
+- **Orchestrated:** invoke `agent-implement-prd` passing the PRD. You approve the execution plan; the agent then dispatches a subagent (`step-agent`) per step and advances group by group on its own once each group's `verify` passes. Subagents only stop at architectural gates and when `verify` does not converge. At the end, the `code-reviewer` reviews the whole PRD, its findings are sent back to the steps that own them for fixing, and you approve the result at a single code review gate.
 - **Manual:** open multiple terminals, each with an independent Claude Code session running `implement-task`, all reading the same PRD from disk.
 
 **3. Interrupted sessions**
@@ -101,8 +104,8 @@ to read the handoff and the corresponding PRD before continuing.
 
 **4. Closing out**
 
-With all steps complete, use `git-process` to run the tests, push the branch and
-open the Pull Request. Invoke `document-task` to generate the text describing
+With all steps complete, use `git-process` to commit (it runs the tests before
+every commit), push the branch and open the Pull Request. Invoke `document-task` to generate the text describing
 what was done — use it as the PR body or as a closing comment on the issue.
 Include `Closes #<issue>` in the PR body so the issue closes automatically on
 merge.
@@ -111,8 +114,11 @@ merge.
 
 Bugs get their own issue with the `bug` label. Use the `bug-fix` skill: the flow
 is similar to `implement-task` but calibrated for correction — it takes the
-problem description, recovers context from the original session's handoff and PRD
-when they exist, confirms the scope, and implements using TDD.
+problem description (from the bug issue via `gh`, or from you), recovers context
+from the originating work's handoffs and PRD when they exist, records the bug in
+`.claude/docs/bugs/`, confirms the scope and implements using TDD, starting from a
+regression test. The `code-reviewer` reviews the fix before the code review gate,
+and the fix is recorded in the originating PRD as a finished step.
 
 **6. Hotfix**
 
@@ -127,14 +133,14 @@ priority.
 | Skill | When to use |
 |---|---|
 | `plan-task` | To start planning a task. The first skill to invoke in a new development session |
-| `spec-task` | After planning, to generate the PRD with implementation steps |
+| `spec-task` | After planning, to generate the PRD with acceptance criteria and implementation steps |
 | `implement-task` | To implement each PRD step individually |
 | `agent-implement-prd` | To execute multiple PRD steps in parallel via subagents, notifying you only when a gate requires a decision |
 | `bug-fix` | To fix bugs reported in issues |
-| `refactor` | For pure refactors with no new feature (e.g. infra improvements) |
+| `refactor` | For pure refactors with no new feature (e.g. infra improvements) — from a PRD step or standalone |
 | `add-test` | To increase unit test coverage in modules without coverage, independent of any issue |
 | `document-task` | To generate the issue closeout text / PR body at the end of an implementation |
-| `git-process` | To create a branch, commit, run tests, push and open the PR |
+| `git-process` | To create a branch, run tests, commit, push and open the PR |
 | `handoff` | To compact a session's context and pass it to another |
 | `sync-main` | To update every repository in the workspace to its main branch |
 | `zoom-in` / `zoom-out` | To restrict or release the agent's focus to a single repository |
@@ -150,6 +156,7 @@ on demand — not all at once. The global `CLAUDE.md` and each repository's
 | Document | Contents |
 |---|---|
 | `coding-rules.md` | Global implementation rules, TDD, code style |
+| `testing-rules.md` | What to test, at which boundary, how many cases, anti-patterns |
 | `csharp-patterns.md` | Patterns for C#/.NET repositories |
 | `angular-patterns.md` | Patterns for Angular repositories |
 | `react-patterns.md` | Patterns for React repositories |
@@ -204,7 +211,7 @@ generates a file in `.claude/docs/tasks/` ready to paste as the PR body or an
 issue comment.
 
 **The repository I'm working in has no tests. What do I do?**
-Claude writes tests for any new code it creates. For existing code without
+Claude writes tests for the new code it creates, following `testing-rules.md`. For existing code without
 coverage, use the `add-test` skill — it is independent of any issue and can be
 run at any time.
 

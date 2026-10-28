@@ -4,6 +4,9 @@ description: Generates the issue closeout document (Pull Request body or complet
 ---
 
 Generate the issue closeout document based on what was implemented. Save it in `{root}/.claude/docs/tasks/`.
+Keep the document simple and easy to understand. Mention files, classes or methods only when necessary. When you do, use the bare name without its directory — e.g. `RoutineExporter` instead of `src/features/routine/RoutineExporter.ts`.
+
+**Keep the text succinct, simple and objective.**
 
 ---
 
@@ -34,7 +37,7 @@ Five fields are mandatory. One is optional.
 
 **Traceability** — lists the functionality affected by the change, new and existing. These are not links to commits. It is a functional impact map that indicates what may have been affected beyond the direct scope.
 
-**Tests performed** — a brief description of the scenarios tested. A simple list, one scenario per line.
+**Tests performed** — a brief description of the scenarios tested. A simple list, one scenario per item.
 
 **Notes** *(optional)* — use only when there is relevant information that does not fit the fields above. Examples: new environment variables, specific infra configuration, pending external dependencies, manual steps required before or after deploy. Omit the entire section if there is nothing to add.
 

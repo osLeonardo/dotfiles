@@ -1,6 +1,7 @@
 ---
 name: implement-task
-description: Implements the code for a PRD step assigned to the agent. Use whenever the user wants to execute a step, implement something from the step queue, or asks the agent to implement a feature — even if the user does not explicitly mention "step" or the file path.
+allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent
+description: Implements a PRD step with TDD, from the tests through the code review gate. Use whenever the user wants to execute a step, implement something from the step queue, or asks the agent to implement a new feature — even if the user does not explicitly mention "step" or the file path. To fix a bug, use bug-fix; for a refactor with no new behavior, use refactor; to run several steps in parallel, use agent-implement-prd.
 ---
 
 ## Quick references
@@ -8,6 +9,7 @@ description: Implements the code for a PRD step assigned to the agent. Use whene
 | What I need | What I must read |
 |---|---|
 | Implement code | `{root}/.claude/docs/knowledge/coding-rules.md` |
+| Write or change tests | `{root}/.claude/docs/knowledge/testing-rules.md` |
 
 ---
 
@@ -27,49 +29,15 @@ Check the fields below before starting. For any missing field that cannot be inf
 
 ## Step 1 — Select the step
 
-```
-IF the user specified a step (title, number or PRD file):
-  1. Locate the step in `.claude/docs/prd/`
-  2. Read the file
-  3. IF all blockers have Status: Finished → Step 2
-     ELSE → show the menu (blocked steps marked as unavailable)
-IF no step identified → show the menu
-IF the user's request falls outside the step pattern → show the menu
-```
-
-**Menu format:**
-```
-Which step do you want to implement?
-
-[context] <description of the out-of-pattern request>
-          → <what the agent plans to do>
-
-[01] <Title>
-[02] <Title>
-
-Blocked steps (unavailable):
-  [03] <Title> — waiting on step 01
-```
-
-Execute only one step per invocation. Wait for the choice before continuing.
+Follow `{root}/.claude/skills/common/select-step.md`.
 
 ---
 
 ## Step 2 — Read the repositories' documentation
 
-For each repository in the step's `Affected repositories and layers`:
+First read, in full, every document listed under `## Required reading` in the PRD. Then, for each repository in the step's `Affected repositories and layers`, follow `{root}/.claude/skills/common/read-repo-docs.md`.
 
-1. Find the repo's `single|multi` classification in the Repository Map of the global `CLAUDE.md` and route accordingly:
-   - **single**: read `CONTEXT.md` and `docs/adr/` at the root
-   - **multi**: consult `CONTEXT-MAP.md`, route by the step's domains/anchor entities and read **only** the `docs/contexts/{slug}/CONTEXT.md` and `docs/contexts/{slug}/adr/` of the relevant Contexts (plus the root `docs/adr/` for cross-cutting ADRs)
-2. Read the repo's `CLAUDE.md`
-   - If it does not exist: create it (lazily), infer the test command from the project type (`package.json`, `*.csproj`, `pyproject.toml`, `go.mod`) and record it in the file
-
-**On-demand re-read trigger (multi repo):** if, during implementation, you run into a domain/entity/file not covered by the already-loaded Contexts, **consult `CONTEXT-MAP.md` and load that Context at that moment** before proceeding — loading is incremental, not a single gate at the start.
-
-IF there is a contradiction between the code and `CONTEXT.md` → surface it to the user before proceeding.
-
-Use the glossary's canonical terms throughout the generated code. In a conflict between the local `CLAUDE.md` and the global rules, the local `CLAUDE.md` wins.
+IF the repo has no `CLAUDE.md`: create it (lazily), infer the test command from the project type (`package.json`, `*.csproj`, `pyproject.toml`, `go.mod`) and record it in the file.
 
 ---
 
@@ -81,43 +49,40 @@ In the PRD file, in the selected step's section, change `Status: Pending` → `S
 
 ## Step 4 — Implement (TDD)
 
-Read `coding-rules.md` in full (see Quick references) before writing a single line.
+Read `coding-rules.md` and `testing-rules.md` in full (see Quick references) before writing a single line.
 
-### Gate 1 — Test cases
+**There is no upfront approval of test cases.** They derive from the criteria listed in the step's `Criteria covered` — defined in the PRD's `## Acceptance Criteria` section and approved along with it. Use `testing-rules.md` to decide what to test, at which boundary, at which level and how many cases.
 
-1. Propose the test scenarios, including edge cases
-2. Wait for explicit approval — do not write any test before that
-3. **Red** — write the approved tests
-4. **Green** — write the minimum code to make the tests pass
-5. **Refactor** — improve the code following `coding-rules.md` without breaking tests
-6. **Verification** — run all tests in the affected repositories
-   - IF any fail → go back to Refactor
+> In a PRD written before this format (acceptance criteria inside the step itself, no `Criteria covered` field), the step's own `Acceptance Criteria` play this role.
 
-### Gate 2 — Code review
+### Cycle
 
-7. Present a summary of what was implemented
-8. Wait for explicit approval
+The unit of the cycle is the **acceptance criterion**, not the individual test.
 
-**Only after explicit Gate 2 approval:**
-- Change `Status: Implementing` → `Status: Finished` in the selected step's section in the PRD
-- List every changed file
-- Suggest the user invoke the `document-task` skill to generate the issue closeout text / Pull Request body
+1. **Red** — write the tests for one criterion, at the boundary where the behavior is observable, and confirm they fail
+2. **Green** — write the code that satisfies them
+3. Repeat 1 and 2 for the next criterion, until all are covered
+4. **Clean up** — improve the code following the rules without breaking the tests
+5. **Verification (`verify`)** — follow `{root}/.claude/skills/common/verify.md`
+
+How many tests each criterion gets is your call, guided by `testing-rules.md`. The order only guarantees that no test is born after the code it should have driven.
+
+### Gate — Code review
+
+6. Present:
+   - a summary of what was implemented
+   - the tests written and which criterion (`AC-N.M`) each one covers
+   - behaviors found outside the step's scope, if any, kept apart from the rest
+   - broad refactors left out of the cycle, if any
+7. Wait for explicit approval
+
+**Only after explicit Gate approval:** follow `{root}/.claude/skills/common/close-step.md`. When this is the last step of the PRD, closing includes the independent review by the `code-reviewer`.
 
 ---
 
 ## Execution modes
 
-| Mode | Behavior |
-|---|---|
-| **AFK** | Runs autonomously from start to finish |
-| **HITL** | Pauses at any decision with more than one reasonable approach |
-
-In **both modes**, you must stop and wait for the user at:
-- Removal of an entire file
-- Architectural decisions → read `.claude/docs/templates/adr-template.md` and present it to the user
-- Installing or updating an external package
-- A breaking change to a module's public interface
-- Any irreversible action
+Follow `{root}/.claude/skills/common/mandatory-stops.md` — it defines the AFK/HITL behavior and the stops that apply in both modes.
 
 ---
 

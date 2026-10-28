@@ -1,6 +1,7 @@
 ---
 name: git-process
-description: Manages the git lifecycle of an issue using deterministic scripts: creates the working branch, commits, runs tests and pushes to the remote for Pull Request creation. Use when the user wants to create a branch, commit, run tests or push following the standard process.
+allowed-tools: Bash(cd *), Bash(bash *.claude/docs/scripts/git-process/*), Bash(git add *), Bash(git status *), Bash(git diff *)
+description: Manages the git lifecycle of an issue using deterministic scripts: creates the working branch, runs tests, commits and pushes to the remote for Pull Request creation. Use when the user wants to create a branch, commit, run tests or push following the standard process.
 ---
 
 ## Configuration
@@ -18,7 +19,7 @@ Check the fields below before starting. For any missing field that cannot be inf
 | Target repository | Conversation context or active zoom-in | Ask the user |
 | Flow (`normal` or `hotfix`) | The type of work described in the PRD or by the user | Assume `normal`; confirm in the case of a hotfix |
 | Issue number | PRD, step or user instruction | Ask the user — it is optional, but must be requested explicitly before proceeding without it |
-| Slug | User instruction or the issue title | Ask the user |
+| Slug | Existing branch for the issue; otherwise inferred from the issue title, in kebab-case | Ask the user only if no source exists |
 
 ---
 
@@ -73,34 +74,7 @@ git-create-branch.sh --flow <flow> [--issue <num>] --slug <description>
 
 ---
 
-### Stage 3 — Commit changes
-
-The agent is responsible for selecting and staging the files (`git add`) before invoking the script.
-
-```bash
-git-commit.sh -m "#<issue> - <description>"
-```
-
-> **Format:** the issue number is optional and, when present, must be prefixed only with `#`, with no enclosing symbols.
-> With an issue: `#42 - Description of the change`
-> Without an issue: `Description of the change`
->
-> See `{root}/.claude/docs/knowledge/git-commit-rules.md` for the full standard.
-
-| Code | Action |
-|---|---|
-| `COMMITTED` | Confirm the commit (SHA in `data.sha`) and move to Stage 4 |
-| `NOTHING_STAGED` | Warn the user; wait for instructions on what should be staged |
-| `PROTECTED_BRANCH` | You are on `main`/`master`; go back to Stage 2 and create the working branch |
-| `MSG_FORMAT_INVALID` | Fix the message to match the standard and retry |
-| `MSG_TOO_LONG` | Shorten the subject and retry |
-| `COMMIT_FAILED` | Read `data.git_output`; if a pre-commit hook reformatted files and aborted, re-stage the files listed in `data.staged` and retry; otherwise investigate git's output |
-
-This stage may repeat for multiple commits on the same branch.
-
----
-
-### Stage 4 — Run tests
+### Stage 3 — Run tests
 
 ```bash
 git-run-tests.sh
@@ -110,12 +84,39 @@ git-run-tests.sh
 
 | Code | Action |
 |---|---|
-| `TESTS_PASSED` | Move to Stage 5 |
-| `NO_TESTS_APPLICABLE` | Move to Stage 5 (blocking only if `GS_REQUIRE_TESTS=1` in `config.sh`) |
-| `TESTS_FAILED` | Fix the code → go back to Stage 3 (commit the fix) → retry this stage |
+| `TESTS_PASSED` | Move to Stage 4 |
+| `NO_TESTS_APPLICABLE` | Move to Stage 4 (blocking only if `GS_REQUIRE_TESTS=1` in `config.sh`) |
+| `TESTS_FAILED` | Fix the code → retry this stage. The commit only happens with a green suite |
 | `TESTS_FAILED_NO_EXCEPTIONS` | The repository has no exceptions file; ask the user which tests should be skipped and why → if confirmed, create `exceptions/<repo>.sh` per `exceptions/README.md` → retry this stage |
 
-> The script automatically loads `exceptions/<repo>.sh` when present, overriding `GS_TEST_SUITES`. See `{root}/.claude/docs/scripts/git-process/exceptions/README.md` to create exception files.
+> The script automatically loads `exceptions/<repo>.sh` when present, overriding `GS_TEST_SUITES`. The same file is where a repository declares extra validation suites (e.g. build, lint) that must pass before a commit. See `{root}/.claude/docs/scripts/git-process/exceptions/README.md`.
+
+---
+
+### Stage 4 — Commit changes
+
+The agent is responsible for selecting and staging the files (`git add`) before invoking the script.
+
+```bash
+git-commit.sh -m "#<issue> <what was implemented> — <why it was implemented>"
+```
+
+> **Format:** the issue number is optional and, when present, must be prefixed only with `#`, with no enclosing symbols. The ` — ` (em dash) separating what from why is mandatory.
+> With an issue: `#42 add max-load validation to the set form — the field accepted negative values`
+> Without an issue: `adjust Neovim window keybinds — they clashed with the Alacritty split shortcut`
+>
+> See `{root}/.claude/docs/knowledge/git-commit-rules.md` for the full standard.
+
+| Code | Action |
+|---|---|
+| `COMMITTED` | Confirm the commit (SHA in `data.sha`) and move to Stage 5 |
+| `NOTHING_STAGED` | Warn the user; wait for instructions on what should be staged |
+| `PROTECTED_BRANCH` | You are on `main`/`master`; go back to Stage 2 and create the working branch |
+| `MSG_FORMAT_INVALID` | Fix the message to match the standard and retry |
+| `MSG_TOO_LONG` | Shorten the subject and retry |
+| `COMMIT_FAILED` | Read `data.git_output`; if a pre-commit hook reformatted files and aborted, re-stage the files listed in `data.staged` and retry; otherwise investigate git's output |
+
+This stage may repeat for multiple commits on the same branch — run Stage 3 again before each one.
 
 ---
 
@@ -161,7 +162,7 @@ Without a linked issue, the name becomes `feature/<slug>` / `hotfix/<slug>`.
 
 ## Constraints
 
-- Never skip Stage 4 (tests) before pushing
+- Never skip Stage 3 (tests) before committing and pushing
 - Never use `--no-verify` on commits — the hooks are part of the process
 - Never push to `main`/`master` — the main branch only receives code via PR
 - Never run `push --force` without explicit user approval

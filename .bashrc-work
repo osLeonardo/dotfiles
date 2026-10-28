@@ -18,7 +18,7 @@ esac
 # Configuração do tmux dentro do VSCode
 # "skip"      = não inicia tmux, usa bash puro
 # "no-status" = inicia tmux normalmente, mas sem statusbar
-VSCODE_TMUX_MODE="no-status"
+VSCODE_TMUX_MODE="skip"
 
 _is_vscode() {
   [ "$TERM_PROGRAM" = "vscode" ]
@@ -34,7 +34,7 @@ if command -v tmux &>/dev/null && [ -z "$TMUX" ] && [ -n "$PS1" ]; then
       [ "$VSCODE_TMUX_MODE" = "no-status" ] && TMUX_ARGS+=(\; set status off)
     fi
 
-    tmux new-session -s "$SESSION" "${TMUX_ARGS[@]}"
+    TMUX_AUTOSTART=1 tmux new-session -s "$SESSION" "${TMUX_ARGS[@]}"
     tmux kill-session -t "$SESSION" 2>/dev/null
     exit
   fi

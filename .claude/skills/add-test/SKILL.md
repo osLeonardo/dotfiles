@@ -1,5 +1,6 @@
 ---
 name: add-test
+allowed-tools: Read, Write, Edit, Bash, Glob, Grep
 description: Increases unit test coverage in a module, file or layer that has none, independently of any issue. Use when the user wants to add retroactive tests to existing code as an ongoing quality effort — not to test freshly implemented code from a task, which is implement-task's responsibility.
 ---
 
@@ -7,7 +8,8 @@ description: Increases unit test coverage in a module, file or layer that has no
 
 | What I need | What I must read |
 |---|---|
-| General testing patterns | `{root}/.claude/docs/knowledge/coding-rules.md` |
+| What to test, where and how many cases | `{root}/.claude/docs/knowledge/testing-rules.md` |
+| General implementation patterns | `{root}/.claude/docs/knowledge/coding-rules.md` |
 | C#/.NET testing patterns | `{root}/.claude/docs/knowledge/csharp-patterns.md` |
 | Angular testing patterns | `{root}/.claude/docs/knowledge/angular-patterns.md` |
 | React testing patterns | `{root}/.claude/docs/knowledge/react-patterns.md` |
@@ -30,8 +32,8 @@ This skill **does not change production code** — it only writes retroactive te
 
 ## Step 1 — Map what is missing coverage
 
-1. Find the repo's `single|multi` classification in the Repository Map of the global `CLAUDE.md` and read the relevant `CONTEXT.md` (see the routing in `implement-task`), if needed to understand the target code's domain
-2. Read the repository language's testing patterns (see Quick references) and `coding-rules.md`
+1. If you need to understand the target code's domain, read the repository's glossary following `{root}/.claude/skills/common/read-repo-docs.md` — the glossary alone is enough
+2. Read `testing-rules.md`, the repository language's testing patterns (see Quick references) and `coding-rules.md`
 3. Map, within the scope indicated by the user, what currently exists without tests
 4. Present the mapping to the user: the list of uncovered files/functions/methods within the requested scope
 
@@ -39,8 +41,9 @@ This skill **does not change production code** — it only writes retroactive te
 
 ## Step 2 — Propose test cases
 
-1. For each mapped item, propose the test scenarios, including edge cases
-2. Wait for explicit approval before writing any test
+1. Apply `testing-rules.md`: choose the test boundaries for the mapped scope, discard whatever its "When to write a test" section rules out and propose one case per distinct behavior
+2. Present the chosen boundaries along with the scenarios — here there is no PRD to derive them from, so the choice of boundaries is agreed in this skill
+3. Wait for explicit approval before writing any test
 
 ---
 
