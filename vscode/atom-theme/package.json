@@ -1,0 +1,22 @@
+{
+  "name": "atom-theme",
+  "displayName": "Atom",
+  "description": "Atom colorscheme for VS Code, ported from the nvim/k9s/gnome-terminal Atom palette",
+  "version": "0.0.1",
+  "publisher": "osleonardo",
+  "engines": {
+    "vscode": "^1.70.0"
+  },
+  "categories": [
+    "Themes"
+  ],
+  "contributes": {
+    "themes": [
+      {
+        "label": "Atom",
+        "uiTheme": "vs-dark",
+        "path": "./themes/atom-color-theme.json"
+      }
+    ]
+  }
+}
