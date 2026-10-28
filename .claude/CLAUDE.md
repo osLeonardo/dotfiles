@@ -5,6 +5,7 @@
 | What I need | What I must read |
 |---|---|
 | Create, modify and/or remove any piece of code | `docs/knowledge/coding-rules.md` |
+| Write or change tests | `docs/knowledge/testing-rules.md` |
 | Refactor existing code | `docs/knowledge/refactor-patterns.md` |
 | Create or name branches | `docs/knowledge/git-branch-rules.md` |
 | Write commit messages | `docs/knowledge/git-commit-rules.md` |
@@ -36,6 +37,7 @@ The `{root}/.claude` directory is the support space for the agent's work, organi
 
 - **`.claude/skills/`** — custom skills that extend the agent's capabilities. Only custom skills belong here.
 - **`.claude/docs/`** — centralizes all documentation and artifacts produced by the agent:
+  - **`bugs/`** — bug records filled in by `bug-fix` from `templates/bug-template.md` (behavior, root cause, approved fix).
   - **`handoffs/`** — documents that compact the context of a closed session so a new agent can continue the work.
   - **`knowledge/`** — global rules and shared patterns about the workspace and all its repositories. Documents in this folder must be loaded into memory only when you need them or the user asks. In `.md` files, always look for `Quick references` sections — they hold the rules for loading other files.
   - **`issues/`** — raw issue notes, copied from GitHub or written by hand.

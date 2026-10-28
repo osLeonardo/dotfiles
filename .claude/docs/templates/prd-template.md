@@ -18,7 +18,22 @@
 
 Numbered and thorough list. Cover every relevant actor and scenario.
 
-1. As a <actor>, I want <functionality>, so that <benefit>
+1. **US-1** — As a <actor>, I want <functionality>, so that <benefit>
+
+## Acceptance Criteria
+
+The issue's contract: it is what the user approves along with the PRD and what the end-of-PRD `code-reviewer` checks, criterion by criterion.
+
+### US-1 — <short story title>
+
+- **AC-1.1** — **Given** <initial state with concrete values>, **when** <action>, **then** <observable result>.
+- **AC-1.2** — **Given** ..., **when** ..., **then** ...
+
+Rules for this section:
+- One criterion per observable behavior, with concrete values.
+- Cover the happy path, edge cases and error path of each story. An edge case or error that does not apply is omitted, not invented.
+- **Not acceptance criteria:** build, lint and test suite passing (a precondition of every unit, checked by `verify`); implementation constraints such as "reuse the existing utility" (they go in `## Implementation Decisions` and are checked by the `code-reviewer`).
+- IDs are never reused: a removed criterion disappears from the list, and its number does not come back.
 
 ## Implementation Decisions
 
@@ -28,8 +43,10 @@ Technical decisions made during the conversation, organized by category:
 - Contracts between modules (no file paths)
 - API endpoints and data formats
 
-### Architectural Decisions (ADR)
-- Design choices, adopted patterns and their reasons
+### Architectural Decisions
+- Design choices, adopted patterns and their reasons — **only those that did not become an ADR**
+- Constraints the code must respect without being observable behavior (e.g. reuse an existing component instead of creating another)
+- The paths of the ADRs, created in this session or pre-existing, go in `## Required reading`
 
 ### Schema Changes
 - Changes to the database or data models
@@ -47,36 +64,42 @@ What explicitly is **not** part of this issue.
 
 Relevant extra context, identified risks, external dependencies.
 
+## Required reading
+
+Documents the agent must load **before** implementing any step. Includes what was produced in
+this session and what already existed and constrains the implementation.
+
+| Document | Why |
+|---|---|
+| `<path relative to {root}>` | <created in this session / pre-existing — what it determines> |
+
+Rules for this section:
+- Paths relative to `{root}`, one per row. **Never** copy the document's content here — content
+  goes stale, the path does not.
+- A relevant pre-existing ADR carries the same weight as one created now.
+- Included: ADRs, the `CONTEXT.md` of the Contexts touched, the session's handoffs, pattern docs
+  that apply only to this issue.
+- If nothing applies, write `None` — do not leave the table with the example row.
+
 ---
 
 ## Steps
+
+Each step is a **tracer bullet** (vertical slice): it cuts through all layers end to end, is demonstrable on its own and can be executed autonomously by an agent. Every acceptance criterion appears in the `Criteria covered` of some step.
 
 ### Step 01 — <Title>
 
 **Status:** Pending
 **Execution type:** AFK | HITL
-**Stories covered:** US-N, US-N
+**Criteria covered:** AC-1.1, AC-1.2, AC-2.1
 
 #### What To Build
 
-<Description of the end-to-end behavior of this vertical slice. Describe what must
-work at the end — from the entry point to the observable result — not how each
-layer should be implemented internally.
-
-Be specific about scope: what IS included and what is NOT included in this step.>
+<What must work at the end of this step, from the entry point to the observable result — not how each layer should be implemented internally. State what IS and what is NOT included.>
 
 #### Affected repositories and layers
 
-<list the repositories that will be modified and which of their layers are affected>
-
-#### Acceptance Criteria
-
-- [ ] <Verifiable, objective criterion 1>
-- [ ] <Verifiable, objective criterion 2>
-- [ ] <Verifiable, objective criterion 3>
-
-The criteria must be verifiable without ambiguity: an agent must be able to
-determine whether each one was met by examining the code or running the system.
+<the repository modified and which of its layers are affected>
 
 #### Blockers
 

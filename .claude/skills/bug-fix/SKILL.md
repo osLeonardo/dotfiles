@@ -1,5 +1,6 @@
 ---
 name: bug-fix
+allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent
 description: Fixes bugs reported in issues against already-implemented functionality. Use whenever the user wants to fix a bug — even if they describe the problem in their own words, without explicitly mentioning "bug" or the file path.
 ---
 
@@ -8,6 +9,7 @@ description: Fixes bugs reported in issues against already-implemented functiona
 | What I need | What I must read |
 |---|---|
 | Implement code | `{root}/.claude/docs/knowledge/coding-rules.md` |
+| Write or change tests | `{root}/.claude/docs/knowledge/testing-rules.md` |
 
 ---
 
@@ -25,25 +27,27 @@ Check the fields below before starting. For any missing field that cannot be inf
 
 | Field | Source | If missing |
 |---|---|---|
-| Bug description | The user, in their own words | Ask the user |
+| Bug description | The bug issue's body (see below), or the user in their own words; the user may complement the issue | Ask the user |
 | Bug issue number | Provided by the user or obtained via `gh issue list --label bug` | Ask the user — optional, but request it explicitly |
 | Originating work | The issue/PRD that introduced the behavior, inferred from the handoff/PRD in context | Ask the user; proceed without it if it genuinely does not exist |
 | Corresponding PRD | `.claude/docs/prd/<issue>-*.md` | If not found, ask the user where it is or request its contents |
-| Original session's handoff (if any) | `.claude/docs/handoffs/` | Optional — proceed without it if it does not exist or is not found |
+| Originating work's handoffs (if any) | `.claude/docs/handoffs/<issue>-*` | **Optional** — look for **all** files whose name starts with the originating issue number and **read each one in full** in Step 1. Proceed normally if none exist |
+
+When the bug issue number is known, read it with `gh issue view <number> --json title,body,labels` and use its body as the bug description. Images are not analyzed. If `gh` fails, ask the user for the description.
 
 ---
 
 ## Step 1 — Recover context
 
 1. Read the originating work's PRD (`.claude/docs/prd/<issue>-*.md`), if it exists
-2. IF the user references, or there exists, a handoff from the original session → read it too
+2. Read the originating work's handoffs found in the prerequisites, if any, plus any other the user references
 3. Confirm you understand the original functionality the bug relates to before proceeding
 
 ---
 
 ## Step 2 — Record the bug
 
-Fill in [bug-template.md](../../docs/templates/bug-template.md) with the description provided by the user, referencing the source issue identified in Step 1.
+Fill in [bug-template.md](../../docs/templates/bug-template.md) with the bug description (and the user's complement, if any), referencing the source issue identified in Step 1.
 
 Save it to `{root}/.claude/docs/bugs/<issue>-<slug>.md` (create the folder if it does not exist).
 
@@ -58,7 +62,7 @@ Before implementing anything:
 1. Present your reading of the problem and the root cause hypothesis, if already identifiable
 2. List the repositories and layers likely to be affected
 3. Confirm with the user whether the fix goes on a new branch (original work already merged) or on the existing branch
-4. Wait for explicit confirmation of the scope before advancing to Gate 1
+4. Wait for explicit confirmation of the scope before advancing to the implementation
 
 This does not replace `plan-task` — it is a targeted scope confirmation, proportional to the size of a fix. If during this stage it becomes clear the fix requires broad design decisions (not just a targeted adjustment), signal to the user that the situation may benefit from a `plan-task` session first.
 
@@ -66,39 +70,46 @@ This does not replace `plan-task` — it is a targeted scope confirmation, propo
 
 ## Step 4 — Read the repositories' documentation
 
-For each affected repository identified in Step 3, follow the same routing as `implement-task`:
-
-1. Find the repo's `single|multi` classification in the Repository Map of the global `CLAUDE.md` and route accordingly:
-   - **single**: read `CONTEXT.md` and `docs/adr/` at the root
-   - **multi**: consult `CONTEXT-MAP.md`, route by the bug's domains/anchor entities and read **only** the `docs/contexts/{slug}/CONTEXT.md` and `docs/contexts/{slug}/adr/` of the relevant Contexts (plus the root `docs/adr/` for cross-cutting ADRs)
-2. Read the repo's `CLAUDE.md`
-
-IF there is a contradiction between the code and `CONTEXT.md` → surface it to the user before proceeding.
+For each affected repository identified in Step 3, follow `{root}/.claude/skills/common/read-repo-docs.md`, routing by the bug's domains and entities.
 
 ---
 
 ## Step 5 — Implement (TDD)
 
-Read `coding-rules.md` in full (see Quick references) before writing a single line.
+Read `coding-rules.md` and `testing-rules.md` in full (see Quick references) before writing a single line.
 
-### Gate 1 — Test cases
+### Cycle
 
-1. Propose the test scenarios — you must include a regression test that reproduces the described bug
-2. Wait for explicit approval — do not write any test before that
-3. **Red** — write the approved tests, confirm the regression test fails against the current code
-4. **Green** — write the minimum code to make the tests pass
-5. **Refactor** — improve the code following `coding-rules.md` without breaking tests
-6. **Verification** — run all tests in the affected repositories
-   - IF any fail → go back to Refactor
+1. **Red** — write the regression test that reproduces the described bug and confirm it fails against the current code
+2. **Green** — write the minimum code to make the test pass
+3. **Refactor** — improve the code following the rules without breaking the tests
+4. **Verification (`verify`)** — follow `{root}/.claude/skills/common/verify.md`
 
-### Gate 2 — Code review
+There is no upfront approval of test cases: the bug's scope was already confirmed in the previous step.
 
-7. Present a summary of what was fixed, including the identified root cause
-8. Wait for explicit approval
+### Gate — Code review
 
-**Only after explicit Gate 2 approval:**
-- Update the originating PRD with what was done (a new entry referencing the bug artifact — do not duplicate the artifact's content in the PRD)
+> **Before presenting the summary**, invoke the `code-reviewer` subagent (`{root}/.claude/agents/code-reviewer.md`) passing: the paths of the bug artifact and of the originating PRD (if any), the list of changed files, the affected repositories and the paths of the applicable pattern docs (`coding-rules.md`, `testing-rules.md` + each stack's `*-patterns.md`). Include its return **in full** in the summary, `BLOCKER` findings first, ending with its `VERDICT:` line — the user decides what becomes a fix. A bug fix is a closed unit, so the review happens here rather than at the end of a PRD.
+
+5. Present a summary of what was fixed, including the identified root cause
+6. Wait for explicit approval
+
+**Only after explicit Gate approval:**
+- IF there is an originating PRD → record the fix in it as a new step, at the end of `## Steps`, already finished. The PRD remains the record of what was delivered for the issue, and the bug's content lives only in the artifact — do not duplicate it. Follow the template's step structure (`What To Build`, `Affected repositories and layers` and, if any, `Implementation Notes`), with this header:
+
+  ```
+  ### Step NN — Bug #<issue>: <short title>
+
+  **Status:** Finished
+  **Bug:** #<issue> — see `.claude/docs/bugs/<file>.md` (behavior, root cause, approved fix; do not duplicate here).
+  ```
 - List every changed file
+
+---
+
+## Execution modes
+
+Follow `{root}/.claude/skills/common/mandatory-stops.md`.
 
 ---
 

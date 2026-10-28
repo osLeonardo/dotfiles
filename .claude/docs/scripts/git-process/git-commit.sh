@@ -9,8 +9,10 @@
 # Output: ALWAYS a single JSON object on stdout (see lib/json.sh).
 #
 # Usage:
-#   git-commit.sh -m "#42 - description of the changes"
-#   git-commit.sh -m "description of the changes"        (issue optional)
+#   git-commit.sh -m "#42 add max-load validation to the set form — the field accepted negative values"
+#   git-commit.sh -m "adjust Neovim window keybinds — they clashed with the terminal split shortcut"   (issue optional)
+#
+# Run git-run-tests.sh BEFORE this script: a commit only happens with a green suite.
 #
 # NOTE on hooks that reformat files:
 #   If a pre-commit hook alters files and aborts the commit, this script only
@@ -36,7 +38,7 @@ while [[ $# -gt 0 ]]; do
   case $1 in
     -m|--message) MESSAGE=${2:-}; shift 2 ;;
     -h|--help)
-      emit_json "success" "USAGE" "Usage: git-commit.sh -m \"[#<issue> - ]<description>\""
+      emit_json "success" "USAGE" "Usage: git-commit.sh -m \"[#<issue> ]<what> — <why>\""
       exit 0 ;;
     *) emit_error "ARGS_INVALID" "Unknown argument: $1" ;;
   esac
@@ -67,7 +69,7 @@ gc_has_staged_changes || emit_blocked "NOTHING_STAGED" "There are no staged file
 validate_commit_message "$MESSAGE"; vrc=$?
 if (( vrc == 1 )); then
   emit_blocked "MSG_FORMAT_INVALID" \
-    "Message does not match the '[#<issue> - ]<description>' format." \
+    "Message does not match the '[#<issue> ]<what> — <why>' format." \
     "$(printf '{"message":"%s"}' "$(json_escape "$MESSAGE")")"
 elif (( vrc == 2 )); then
   emit_blocked "MSG_TOO_LONG" \
