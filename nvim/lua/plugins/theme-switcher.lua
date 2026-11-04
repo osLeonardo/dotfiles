@@ -60,8 +60,12 @@ return {
     local function set_transparent(transparent)
       current_transparent = transparent
       if transparent then
+        -- Remove só o fundo; fg e estilos do tema continuam no grupo
         for _, group in ipairs(transparency_groups) do
-          vim.api.nvim_set_hl(0, group, { bg = "none" })
+          local hl = vim.api.nvim_get_hl(0, { name = group, link = false })
+          hl.bg = nil
+          hl.ctermbg = nil
+          vim.api.nvim_set_hl(0, group, hl)
         end
       else
         if vim.g.colors_name then
